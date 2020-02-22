@@ -1,0 +1,11 @@
+Package: CMSE
+Title: CMSE: Causal Mean Squared Error index
+Version: 0.1.0
+Author: Timothy R. Brick, Sirui Wan, Daniela Alvarez-Vargas & Drew H. Bailey
+Maintainer: Timothy R. Brick <tbrick@psu.edu>
+Description: CMSE: Causal Mean Squared Error index
+License: GPL-3
+LazyData: true
+URL: https://github.com/trbrick/CMSE
+BugReports: https://github.com/trbrick/CMSE/issues
+RoxygenNote: 7.0.2

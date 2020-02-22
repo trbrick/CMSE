@@ -1,0 +1,35 @@
+
+```{r, setup, echo = FALSE, message = FALSE}
+knitr::opts_chunk$set(
+  comment = "#>",
+  tidy = FALSE,
+  error = FALSE,
+  fig.width = 8,
+  fig.height = 8)
+```
+
+# CMSE
+
+> CMSE: Causal Mean Squared Error index
+
+[![](http://www.r-pkg.org/badges/version/CMSE)](http://www.r-pkg.org/pkg/CMSE)
+[![CRAN RStudio mirror downloads](http://cranlogs.r-pkg.org/badges/CMSE)](http://www.r-pkg.org/pkg/CMSE)
+
+
+CMSE: Causal Mean Squared Error index
+
+## Installation
+
+```{r eval = FALSE}
+devtools::install_github("trbrick/CMSE")
+```
+
+## Usage
+
+```{r}
+library(CMSE)
+```
+
+## License
+
+GPL-3 © 
