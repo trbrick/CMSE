@@ -32,4 +32,4 @@ library(CMSE)
 
 ## License
 
-GPL-3 © 
+GPL-3 © 2020
