@@ -67,8 +67,17 @@ computeNonExperimental <- function(ctl, models, posttest, outcomes) {
     models <- list(models)
   }
   # browser()
-  ctlModels <- lapply(models, function(x) {OpenMx::mxTryHard(mxModel(x, mxctl), extraTries = 50)})
-  b.table <- lapply(ctlModels, "MICr::MICTable", from = posttest, to=outcomes, splitByType = FALSE)
+  ctlModels <- lapply(models, function(x) {
+                                            suppressMessages(
+                                            OpenMx::mxTryHard(
+                                              mxModel(x, mxctl), 
+                                              extraTries = 50, 
+                                              silent = TRUE)
+                                            )
+                                           }
+                      )
+  b.table <- lapply(ctlModels, MICr::MICTable, from = posttest, to=outcomes, 
+                      splitByType = FALSE, print=FALSE)
   b.nonexperimental <- rep(list(list(b=NA)), length(ctlModels))
   for(modelNo in seq_along(b.table)) {
     aModel <- data.frame(b.table[[modelNo]]) 
