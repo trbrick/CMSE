@@ -68,14 +68,38 @@ computeNonExperimental <- function(ctl, models, posttest, outcomes) {
   }
   # browser()
   ctlModels <- lapply(models, function(x) {
-                                            suppressMessages(
-                                            OpenMx::mxTryHard(
-                                              mxModel(x, mxctl), 
-                                              extraTries = 50, 
-                                              silent = TRUE)
-                                            )
-                                           }
-                      )
+          ctlOnly <- mxModel(x, mxctl)
+          if(intervention %in% ctlOnly$manifestVars &&
+             methods::is(ctlOnly, "MxRAMModel")) {
+             if(any(x$A$values[intervention,] !=0) ||
+                any(x$A$free[intervention,] !=FALSE) ||
+                any(x$S$values[intervention,colnames(x$S$values) != intervention] !=0) ||
+                any(x$S$free[intervention,colnames(x$S$values) != intervention] !=FALSE) ) {
+                    warning(paste("CMSE is not designed for models",
+                       "with an endogenous intervention;",
+                       "It may not function as expected."))}
+          # If there's a manifest intervention, isolate it.
+              allVars <- c(x$manifestVars, x$latentVars)
+              ixnVar <- x$A$values[intervention, intervention]
+              # No loadings from intervention for control group.
+              ctlOnly <- mxModel(ctlOnly,
+                          mxPath(from=intervention, to=allVars),
+                          mxPath(from=intervention, 
+                                 to=setdiff(allVars, intervention), 
+                                 arrows=2),
+                            remove=TRUE)
+              ctlOnly <- mxModel(ctlOnly, 
+                                 mxPath(from=intervention, arrows=2,
+                                        values=max(ixnVar, .01), free=FALSE))
+          }
+          suppressMessages(
+          OpenMx::mxTryHard( ctlOnly,
+            extraTries = 50, 
+            silent = TRUE)
+          )
+        }
+      )
+  
   b.table <- lapply(ctlModels, MICr::MICTable, from = posttest, to=outcomes, 
                       splitByType = FALSE, print=FALSE)
   b.nonexperimental <- rep(list(list(b=NA)), length(ctlModels))
@@ -117,6 +141,12 @@ computeNonExperimental <- function(ctl, models, posttest, outcomes) {
 #' @export
 CMSE <- function(dataset, intervention, models, posttest, outcomes, covariates=NULL, ..., nrows=NA, latentPosttest=NA) {
   # browser()
+  if(methods::is(dataset, "MxDataStatic")) {
+    dataset <- dataset$observed
+  } 
+  if(!is.data.frame(dataset)){
+    stop("dataset must be a data frame, or raw mxData object")
+  }
   
   # Default to posttest-is-latent-posttest
   if(is.na(latentPosttest)) {
@@ -134,6 +164,7 @@ CMSE <- function(dataset, intervention, models, posttest, outcomes, covariates=N
   }
   
   experimental <- computeExperimental(dataset, intervention, posttest, outcomes, covariates)
+  
   # Estimated on Control group only; hence dataset$intervention==FALSE
   nonExperimental <- computeNonExperimental(dataset[dataset$intervention==FALSE,], models, latentPosttest, outcomes)
   
