@@ -42,7 +42,8 @@ computeExperimental <- function(dataset, intervention, posttest, outcomes, covar
 #' @param models a list of mxModel objects (like those returned from makeARPanelModels) for fitting
 #' @param posttest character string containing the name of the posttest true score (see details), or a vector of the same length as models containing the true scores for each
 #' @param outcomes character vector including names of all additional outcomes, or a list the same length as models with outcomes for each model
-#'
+#' @param intervention character vector containing the name of the intervention.  If present, the intervention will be isolated to avoid causing misfit.
+#' 
 #' @return a list containing the model-implied effect of the posttest on each outcome
 #'
 #' @import MICr
@@ -50,7 +51,7 @@ computeExperimental <- function(dataset, intervention, posttest, outcomes, covar
 #' @importFrom methods is
 #' 
 #' @export
-computeNonExperimental <- function(ctl, models, posttest, outcomes) {
+computeNonExperimental <- function(ctl, models, posttest, outcomes, intervention=NA) {
   if(is.data.frame(ctl)) {
     mxctl <- mxData(ctl, type="raw")
   } else if(methods::is(ctl, "MxDataStatic")) {
@@ -69,7 +70,8 @@ computeNonExperimental <- function(ctl, models, posttest, outcomes) {
   # browser()
   ctlModels <- lapply(models, function(x) {
           ctlOnly <- mxModel(x, mxctl)
-          if(intervention %in% ctlOnly$manifestVars &&
+          if(!is.na(intervention) &&
+             intervention %in% ctlOnly$manifestVars &&
              methods::is(ctlOnly, "MxRAMModel")) {
              if(any(x$A$values[intervention,] !=0) ||
                 any(x$A$free[intervention,] !=FALSE) ||
@@ -166,7 +168,9 @@ CMSE <- function(dataset, intervention, models, posttest, outcomes, covariates=N
   experimental <- computeExperimental(dataset, intervention, posttest, outcomes, covariates)
   
   # Estimated on Control group only; hence dataset$intervention==FALSE
-  nonExperimental <- computeNonExperimental(dataset[dataset$intervention==FALSE,], models, latentPosttest, outcomes)
+  nonExperimental <- computeNonExperimental(dataset[dataset$intervention==FALSE,], 
+                                            models, latentPosttest, outcomes,
+                                            intervention)
   
   # browser()
   outcomes <- as.list(rep(NA, length(models)))
