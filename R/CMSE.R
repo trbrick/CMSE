@@ -43,23 +43,57 @@ computeExperimental <- function(dataset, intervention, posttest, outcomes, covar
 #' @param posttest character string containing the name of the posttest true score (see details), or a vector of the same length as models containing the true scores for each
 #' @param outcomes character vector including names of all additional outcomes, or a list the same length as models with outcomes for each model
 #' @param intervention character vector containing the name of the intervention.  If present, the intervention will be isolated to avoid causing misfit.
+#' @param ... additional arguments to \link{mxTryHard()}
+#' @param returnModels (default FALSE) whether to return the models themselves in addition to the CMSE elements.
 #' 
-#' @return a list containing the model-implied effect of the posttest on each outcome
-#'
-#' @import MICr
+#' @return a list containing the model-implied effect of the (standardized) posttest on each (standardized) outcome
+#' 
+#' @details This function returns the (standardized) model-implied causal effect of a change to the 
+#' posttest change of one (standardized) unit.  CMSE computation requires this to be performed only
+#' on the control group.  If the intervention exists in the model, it is isolated by removing all
+#' outgoing paths.  This prevents it from influencing the paths.  Its variance is bounded above zero
+#' to ensure that the model-implied covariance matrix does not become non-positive-definite.
+#' 
+#'#' @import MICr
 #' 
 #' @importFrom methods is
+#' @importFrom OpenMx mxData mxModel mxTryHard mxPath
 #' 
 #' @export
-computeNonExperimental <- function(ctl, models, posttest, outcomes, intervention=NA) {
+#' 
+computeNonExperimental <- function(ctl, models, posttest, outcomes, intervention=NA, 
+                                   ..., returnModels=FALSE) {
   if(is.data.frame(ctl)) {
+    if(intervention %in% names(ctl)) {
+      columns <- intersect(c(posttest, outcomes), names(ctl))
+      ctl[,columns] <- lapply(ctl[,columns], 
+                              function(x) { return(x/sd(x[ctl$intervention==0], na.rm = TRUE))}
+                            )
+    }
     mxctl <- mxData(ctl, type="raw")
+  } else if(methods::is(ctl, "MxDataStatic") && ctl$type == "raw") {
+    mxctl <- ctl
+    ctl <- mxctl$observed
+    nrows <- mxctl$numObs
+    if(intervention %in% names(ctl)) {
+      columns <- intersect(c(posttest, outcomes), names(ctl))
+      ctl[,columns] <- lapply(ctl[,columns], 
+                              function(x) { return(x/sd(x[ctl$intervention==0], na.rm = TRUE))}
+      )
+    }
+    mxctl <- mxData(ctl, type="raw", numObs=nrows)
   } else if(methods::is(ctl, "MxDataStatic")) {
     mxctl <- ctl
     ctl <- mxctl$observed
     nrows <- mxctl$numObs
+    warning(paste0("Cannot confirm appropriate standardization.\n",
+    "CMSE requires posttests and outcomes be scaled so that",
+    "the standard deviation of the control group is 1.0."))
   } else if(is.matrix(ctl) && !is.na(nrows)) {
-    warning("Convering covariance matrix into mxData object.")
+    warning(paste0("Convering covariance matrix into mxData object. ",
+            "Cannot confirm appropriate standardization.\n",
+            "CMSE requires posttests and outcomes be scaled so that ",
+            "the standard deviation of the control group is 1.0."))
     mxctl <- mxData(ctl, type="cov", numObs = nrows)
   } else {
     stop("ctl and ixn must be data frames, mxData objects, or covariance matrices with nrows")

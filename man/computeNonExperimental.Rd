@@ -4,7 +4,15 @@
 \alias{computeNonExperimental}
 \title{Compute Model-implied CMSE Elements}
 \usage{
-computeNonExperimental(ctl, models, posttest, outcomes)
+computeNonExperimental(
+  ctl,
+  models,
+  posttest,
+  outcomes,
+  intervention = NA,
+  ...,
+  returnModels = FALSE
+)
 }
 \arguments{
 \item{ctl}{the control group only of the experimental data set}
@@ -14,10 +22,25 @@ computeNonExperimental(ctl, models, posttest, outcomes)
 \item{posttest}{character string containing the name of the posttest true score (see details), or a vector of the same length as models containing the true scores for each}
 
 \item{outcomes}{character vector including names of all additional outcomes, or a list the same length as models with outcomes for each model}
+
+\item{intervention}{character vector containing the name of the intervention.  If present, the intervention will be isolated to avoid causing misfit.}
+
+\item{...}{additional arguments to \link{mxTryHard()}}
+
+\item{returnModels}{(default FALSE) whether to return the models themselves in addition to the CMSE elements.}
 }
 \value{
 a list containing the model-implied effect of the (standardized) posttest on each (standardized) outcome
 }
 \description{
 Computes b.nonexperimental and a.nonexperimental values for the CMSE computation.
+}
+\details{
+This function returns the (standardized) model-implied causal effect of a change to the 
+posttest change of one (standardized) unit.  CMSE computation requires this to be performed only
+on the control group.  If the intervention exists in the model, it is isolated by removing all
+outgoing paths.  This prevents it from influencing the paths.  Its variance is bounded above zero
+to ensure that the model-implied covariance matrix does not become non-positive-definite.
+
+#' @import MICr
 }
