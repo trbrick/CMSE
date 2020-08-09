@@ -16,7 +16,7 @@ computeNonExperimental(ctl, models, posttest, outcomes)
 \item{outcomes}{character vector including names of all additional outcomes, or a list the same length as models with outcomes for each model}
 }
 \value{
-a list containing the model-implied effect of the posttest on each outcome
+a list containing the model-implied effect of the (standardized) posttest on each (standardized) outcome
 }
 \description{
 Computes b.nonexperimental and a.nonexperimental values for the CMSE computation.

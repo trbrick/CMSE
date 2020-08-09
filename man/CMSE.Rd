@@ -47,11 +47,22 @@ a list containing elements:
 between the model-implied causal effects of an intervention and the 
 empirically determined effects.
 
-CMSE: Causal Mean Squared Error index
+CMSE computes the Causal Mean Squared Error (CMSE).
+CMSE indexes the difference between the expected effect of the intervention and
+the real impact of the intervention.  Specifically, the CMSE computes the true
+effect of the intervention on each outcome using a simple linear regression
+(controlling appropriately for covariates) and compares that true effect
+to the model-implied effect on that outcome.  By focusing on the specific
+causal predictions of the model, CMSE captures a different slice of information
+than other fit statistics.
+
+See Wan, et al., for more.
 }
 \details{
 This is quantified as the difference between the (regression-determined)
 empirical effects of the intervention on distal outcomes, and the model's 
 predictions about those distal effects given the empirical proximal effect.
 See details for more.
+
+CMSE: Causal Mean Squared Error index
 }

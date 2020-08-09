@@ -13,21 +13,21 @@
 #'         - `$c` contains a named list of all outcomes; each outcome contains the experimentally-determined effect of the intervention on that outcome
 #' 
 #' @importFrom stats as.formula coef lm na.exclude
+#' 
 #' @export
 computeExperimental <- function(dataset, intervention, posttest, outcomes, covariates=NULL) {
-  posttestFormula <- as.formula(paste(posttest, "~", paste(c(intervention, covariates), collapse=' + ')))
-  # Standardized:
-  # posttestFormula <- as.formula(paste("scale(", posttest, ") ~ ", paste("scale(", c(intervention, covariates), ")", collapse=' + ')))
+  # posttestFormula <- as.formula(paste(posttest, "~", paste(c(intervention, covariates), collapse=' + ')))
+
+  # Semi-standardized:
+  posttestFormula <- as.formula(paste("scale(", posttest, ") ~ ", paste(c(intervention, covariates), collapse=' + ')))
   regressPosttest <- lm(posttestFormula, data=dataset, na.action =na.exclude)
   a.experimental <- coef(regressPosttest)[intervention]
-  # Standardized:
-  #a.experimental <- coef(regressPosttest)[paste0("scale(", intervention, ")")]
-  
+
   c.experimental <- as.list(rep(NA, length(outcomes)))
   names(c.experimental) <- outcomes
-  # browser()
+
   for(anOutcome in outcomes) {
-    outcomeFormula <- as.formula(paste(anOutcome, "~", paste(c(intervention, covariates), collapse=' + ')))
+    outcomeFormula <- as.formula(paste("scale(", anOutcome, ") ~", paste(c(intervention, covariates), collapse=' + ')))
     regressOutcome <- lm(outcomeFormula, data=dataset)
     c.experimental[[anOutcome]] <- unname(coef(regressOutcome)[intervention])
   }
@@ -103,7 +103,7 @@ computeNonExperimental <- function(ctl, models, posttest, outcomes, intervention
       )
   
   b.table <- lapply(ctlModels, MICr::MICTable, from = posttest, to=outcomes, 
-                      splitByType = FALSE, print=FALSE)
+                      splitByType = FALSE, print=FALSE, standardize=TRUE)
   b.nonexperimental <- rep(list(list(b=NA)), length(ctlModels))
   for(modelNo in seq_along(b.table)) {
     aModel <- data.frame(b.table[[modelNo]]) 
@@ -111,6 +111,7 @@ computeNonExperimental <- function(ctl, models, posttest, outcomes, intervention
     b.nonexperimental[[modelNo]]$b <- aModel[,3]
     names(b.nonexperimental[[modelNo]]$b) <- aModel[,2]
   }
+  if(returnModels) return(list(b.nonexperimental, ctlModels))
   return(b.nonexperimental)
 }
 
@@ -141,6 +142,7 @@ computeNonExperimental <- function(ctl, models, posttest, outcomes, intervention
 #'         - `$nonexperimental` contains the model-implied effect of the intervention on posttest and each outcome
 #'
 #' @export
+#' 
 CMSE <- function(dataset, intervention, models, posttest, outcomes, covariates=NULL, ..., nrows=NA, latentPosttest=NA) {
   # browser()
   if(methods::is(dataset, "MxDataStatic")) {
