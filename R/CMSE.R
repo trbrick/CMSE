@@ -66,8 +66,8 @@ computeNonExperimental <- function(ctl, models, posttest, outcomes, intervention
   if(is.data.frame(ctl)) {
     if(intervention %in% names(ctl)) {
       columns <- intersect(c(posttest, outcomes), names(ctl))
-      ctl[,columns] <- lapply(ctl[,columns], 
-                              function(x) { return(x/sd(x[ctl$intervention==0], na.rm = TRUE))}
+      ctl[,columns] <- sapply(columns,
+                              function(x) { return(ctl[,x]/sd(ctl[ctl$intervention==0,x], na.rm = TRUE))}
                             )
     }
     mxctl <- mxData(ctl, type="raw")
@@ -77,8 +77,8 @@ computeNonExperimental <- function(ctl, models, posttest, outcomes, intervention
     nrows <- mxctl$numObs
     if(intervention %in% names(ctl)) {
       columns <- intersect(c(posttest, outcomes), names(ctl))
-      ctl[,columns] <- lapply(ctl[,columns], 
-                              function(x) { return(x/sd(x[ctl$intervention==0], na.rm = TRUE))}
+      ctl[,columns] <- sapply(columns,
+                              function(x) { return(ctl[,x]/sd(ctl[ctl$intervention==0,x], na.rm = TRUE))}
       )
     }
     mxctl <- mxData(ctl, type="raw", numObs=nrows)
@@ -144,6 +144,11 @@ computeNonExperimental <- function(ctl, models, posttest, outcomes, intervention
     names(b.nonexperimental)[modelNo] <- names(aModel[3])
     b.nonexperimental[[modelNo]]$b <- aModel[,3]
     names(b.nonexperimental[[modelNo]]$b) <- aModel[,2]
+    if(ncol(aModel) > 3) { # Has SEs!
+      namesSoFar <- names(b.nonexperimental[[modelNo]]$b)
+      b.nonexperimental[[modelNo]]$b <- c(b.nonexperimental[[modelNo]]$b, aModel[,4])
+      names(b.nonexperimental[[modelNo]]$b) <- c(namesSoFar, paste0(aModel[,2], "_SE"))
+    }
   }
   if(returnModels) return(list(b.nonexperimental, ctlModels))
   return(b.nonexperimental)
