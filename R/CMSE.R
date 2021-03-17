@@ -105,7 +105,7 @@ computeNonExperimental <- function(ctl, models, posttest, outcomes, intervention
   ctlModels <- lapply(models, function(x) {
           ctlOnly <- mxModel(x, mxctl)
           if(!is.na(intervention) &&
-             intervention %in% ctlOnly$manifestVars &&
+             (intervention %in% ctlOnly$manifestVars || intervention %in% ctlOnly$latentVars) &&
              methods::is(ctlOnly, "MxRAMModel")) {
              if(any(x$A$values[intervention,] !=0) ||
                 any(x$A$free[intervention,] !=FALSE) ||
@@ -116,7 +116,7 @@ computeNonExperimental <- function(ctl, models, posttest, outcomes, intervention
                        "It may not function as expected."))}
           # If there's a manifest intervention, isolate it.
               allVars <- c(x$manifestVars, x$latentVars)
-              ixnVar <- x$A$values[intervention, intervention]
+              ixnVar <- x$S$values[intervention, intervention]
               # No loadings from intervention for control group.
               ctlOnly <- mxModel(ctlOnly,
                           mxPath(from=intervention, to=allVars),
